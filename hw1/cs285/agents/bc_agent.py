@@ -4,6 +4,7 @@ from .base_agent import BaseAgent
 
 
 class BCAgent(BaseAgent):
+    """ Agent implements a policy in environment """
     def __init__(self, env, agent_params):
         super(BCAgent, self).__init__()
 
@@ -34,7 +35,7 @@ class BCAgent(BaseAgent):
         self.replay_buffer.add_rollouts(paths)
 
     def sample(self, batch_size):
-        return self.replay_buffer.sample_random_data(batch_size)  # HW1: you will modify this
+        return self.replay_buffer.sample_random_data(batch_size)
 
     def save(self, path):
         return self.actor.save(path)

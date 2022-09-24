@@ -14,7 +14,7 @@ from cs285.policies.base_policy import BasePolicy
 
 
 class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
-
+    """ Agent Policy implemented as an MLP. """
     def __init__(self,
                  ac_dim,
                  ob_dim,
@@ -79,9 +79,14 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs
         else:
             observation = obs[None]
+        observation = ptu.from_numpy(observation.astype(np.float32))
+        if self.logits_na:
+            action = self.logits_na(observation)
+        else:
+            action = self.mean_net(observation)
 
-        # TODO return the action that the policy prescribes
-        raise NotImplementedError
+        assert isinstance(action , np.ndarray), f"action is not of type np.ndarray"
+        return action
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -108,9 +113,18 @@ class MLPPolicySL(MLPPolicy):
             self, observations, actions,
             adv_n=None, acs_labels_na=None, qvals=None
     ):
-        # TODO: update the policy and return the loss
-        loss = TODO
+        assert isinstance(observations, np.ndarray), f"observations is not of type np.ndarray"
+
+        self.optimizer.zero_grad()
+
+        policy_actions = super().get_action(observations) # TODO: Is this the right way? Probably is
+        loss = self.loss(policy_actions, actions)
+        loss.backward()
+        self.optimizer.step()
+
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),
+            'Policy Actions' : ptu.to_numpy(policy_actions),
+            'Action Labels': ptu.to_numpy(actions),
         }
